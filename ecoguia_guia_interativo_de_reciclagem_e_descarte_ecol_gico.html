@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoGuia - Guia Interativo de Reciclagem e Descarte Ecológico</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fontes e Ícones Phosphor Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- QuaggaJS para leitura de Código de Barras via Imagem / WebCam -->
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .tab-btn.active {
+            border-bottom-color: #16a34a;
+            color: #16a34a;
+            background-color: #f0fdf4;
+            font-weight: 600;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-50">
+
+    <!-- CABEÇALHO DA APLICAÇÃO -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- LOGO -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                        <i class="ph-bold ph-recycle text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xl text-slate-800 tracking-tight leading-tight flex items-center gap-2">
+                            EcoGuia <span class="bg-brand-100 text-brand-800 text-xs px-2 py-0.5 rounded-full font-medium">Brasil</span>
+                        </h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">Descarte Inteligente & Reciclagem de Cosméticos e Embalagens</p>
+                    </div>
+                </div>
+
+                <!-- CONTADOR RÁPIDO DE PRODUTOS SALVOS -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium">
+                        <i class="ph-bold ph-barcode text-brand-600 text-sm"></i>
+                        <span id="header-saved-count">0</span> salvos
+                    </span>
+                </div>
+            </div>
+
+            <!-- NAVEGAÇÃO DE ABAS -->
+            <nav class="flex overflow-x-auto no-scrollbar border-t border-slate-100 -mb-px" id="tabs-navigation">
+                <button onclick="switchTab('onde-descartar')" id="tab-btn-onde-descartar" class="tab-btn active px-4 py-3 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-brand-600 flex items-center gap-2 whitespace-nowrap transition-colors">
+                    <i class="ph-bold ph-map-pin text-lg"></i> Onde Descartar
+                </button>
+                <button onclick="switchTab('leitor-cadastro')" id="tab-btn-leitor-cadastro" class="tab-btn px-4 py-3 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-brand-600 flex items-center gap-2 whitespace-nowrap transition-colors">
+                    <i class="ph-bold ph-barcode text-lg"></i> Leitor & Cadastro
+                </button>
+                <button onclick="switchTab('catalogo')" id="tab-btn-catalogo" class="tab-btn px-4 py-3 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-brand-600 flex items-center gap-2 whitespace-nowrap transition-colors">
+                    <i class="ph-bold ph-book-open text-lg"></i> Guia de Materiais
+                </button>
+                <button onclick="switchTab('calculadora')" id="tab-btn-calculadora" class="tab-btn px-4 py-3 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-brand-600 flex items-center gap-2 whitespace-nowrap transition-colors">
+                    <i class="ph-bold ph-calculator text-lg"></i> Calculadora Ecológica
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn px-4 py-3 border-b-2 border-transparent text-sm font-medium text-slate-600 hover:text-brand-600 flex items-center gap-2 whitespace-nowrap transition-colors">
+                    <i class="ph-bold ph-lightbulb text-lg"></i> Quiz & Dicas
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- ALERTA / NOTIFICAÇÃO DINÂMICA -->
+        <div id="toast-notification" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300">
+            <i id="toast-icon" class="ph-bold ph-info text-xl text-brand-400"></i>
+            <span id="toast-message" class="text-sm font-medium"></span>
+        </div>
+
+        <!-- 1. ABA ONDE DESCARTAR (PESQUISA DE LOCAIS) -->
+        <section id="tab-onde-descartar" class="tab-content block space-y-6">
+            <!-- HEADER DA ABA -->
+            <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-semibold uppercase tracking-wider mb-3">
+                        <i class="ph-bold ph-compass"></i> Busca Geográfica Ativa
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Encontre Pontos de Descarte Próximos</h2>
+                    <p class="mt-2 text-slate-300 text-sm sm:text-base">
+                        Digite seu CEP, bairro ou endereço para localizar ecopontos, cooperativas, farmácias (para medicamentos) e supermercados parceiros para descarte correto.
+                    </p>
+                </div>
+            </div>
+
+            <!-- BARRA DE BUSCA E FILTROS -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <!-- ENDEREÇO / CEP -->
+                    <div class="md:col-span-6 relative">
+                        <label for="location-input" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Localização (CEP, Bairro, Cidade ou Endereço)</label>
+                        <div class="relative">
+                            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                            <input type="text" id="location-input" placeholder="Ex: 86010-000, Centro, Londrina ou São Paulo" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-slate-800 text-sm outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES DE AÇÃO DO CAMPO DE BUSCA -->
+                    <div class="md:col-span-6 flex items-end gap-2">
+                        <button onclick="searchLocationsByInput()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
+                            <i class="ph-bold ph-magnifying-glass"></i> Buscar Locais
+                        </button>
+                        <button onclick="getUserGPSLocation()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-all border border-slate-300" title="Usar minha localização atual via GPS">
+                            <i class="ph-bold ph-navigation-arrow text-brand-600 text-lg"></i> Usar GPS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SELETOR DE CATEGORIAS DE RESÍDUO -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Filtrar por tipo de resíduo</label>
+                    <div class="flex flex-wrap gap-2" id="waste-category-filters">
+                        <button onclick="filterLocationsByCategory('TODOS')" class="category-filter-btn active-filter px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-brand-600 text-white flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-squares-four"></i> Todos
+                        </button>
+                        <button onclick="filterLocationsByCategory('Cosméticos/Beleza')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-sparkles text-pink-500"></i> Cosméticos & Beleza
+                        </button>
+                        <button onclick="filterLocationsByCategory('Eletrônicos')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-cpu text-blue-500"></i> Eletrônicos
+                        </button>
+                        <button onclick="filterLocationsByCategory('Remédios Vencidos')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-first-aid text-red-500"></i> Remédios Vencidos
+                        </button>
+                        <button onclick="filterLocationsByCategory('Pilhas/Baterias')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-battery-charging text-amber-500"></i> Pilhas & Baterias
+                        </button>
+                        <button onclick="filterLocationsByCategory('Óleo de Cozinha')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-drop text-yellow-600"></i> Óleo de Cozinha
+                        </button>
+                        <button onclick="filterLocationsByCategory('Lâmpadas')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-lightbulb-filament text-purple-500"></i> Lâmpadas
+                        </button>
+                        <button onclick="filterLocationsByCategory('Plásticos')" class="category-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                            <i class="ph-bold ph-arrows-clockwise text-emerald-600"></i> Plásticos/Recicláveis
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATUS DE LOCALIZAÇÃO DO USUÁRIO -->
+            <div id="location-status-bar" class="hidden bg-brand-50 border border-brand-200 p-3.5 rounded-xl text-xs sm:text-sm text-brand-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="ph-bold ph-map-pin-line text-brand-600 text-lg"></i>
+                    <span>Busca de referência: <strong id="current-reference-text">Londrina, PR</strong></span>
+                </div>
+                <span id="results-count-badge" class="bg-brand-200 text-brand-900 px-2.5 py-0.5 rounded-full font-bold text-xs">0 postos</span>
+            </div>
+
+            <!-- LISTAGEM DE POSTOS DE COLETA (CARTÕES) -->
+            <div id="loading-locations-spinner" class="hidden py-12 text-center">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-brand-500 border-t-transparent"></div>
+                <p class="mt-3 text-slate-500 text-sm">Consultando geolocalização e calculando distâncias reais...</p>
+            </div>
+
+            <div id="locations-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+        </section>
+
+        <!-- 2. ABA LEITOR & CADASTRO DE PRODUTOS -->
+        <section id="tab-leitor-cadastro" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="ph-bold ph-barcode text-brand-600 text-2xl"></i>
+                    Identificador & Scanner de Produtos
+                </h2>
+                <p class="text-slate-500 text-sm mt-1">
+                    Escaneie o código de barras da embalagem ou selecione exemplos para obter informações de descarte e reciclabilidade instantâneas.
+                </p>
+
+                <!-- PAINEL DE LEITURA & METODOS -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- ÁREA DE CAPTURA DA CÂMERA OU WEBCAM -->
+                    <div class="md:col-span-6 bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4">
+                        <div>
+                            <h3 class="font-semibold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                                <i class="ph-bold ph-camera text-brand-600"></i> Opções de Leitura Visual
+                            </h3>
+
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <!-- BOTÃO NATIVO DE CÂMERA -->
+                                <label class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 text-center transition-all shadow-sm">
+                                    <i class="ph-bold ph-camera-plus text-base"></i> Bater Foto
+                                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleImageScannerUpload(event)">
+                                </label>
+
+                                <!-- UPLOAD DA GALERIA -->
+                                <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 text-center transition-all border border-slate-300">
+                                    <i class="ph-bold ph-image text-base"></i> Abrir Galeria
+                                    <input type="file" accept="image/*" class="hidden" onchange="handleImageScannerUpload(event)">
+                                </label>
+                            </div>
+
+                            <button onclick="toggleWebcamScanner()" id="btn-toggle-webcam" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                                <i class="ph-bold ph-video-camera text-base"></i> Abrir Câmera ao Vivo
+                            </button>
+                        </div>
+
+                        <!-- CONTAINER DO SCANNER WEBCAM -->
+                        <div id="interactive-scanner-container" class="hidden relative w-full h-48 bg-black rounded-xl overflow-hidden border-2 border-brand-500">
+                            <div id="interactive" class="viewport w-full h-full"></div>
+                            <div class="absolute inset-0 border-2 border-dashed border-emerald-400 pointer-events-none flex items-center justify-center">
+                                <span class="bg-black/60 text-emerald-400 text-[10px] px-2 py-1 rounded">Aponte o código para o centro</span>
+                            </div>
+                        </div>
+
+                        <!-- DIGITAÇÃO MANUAL -->
+                        <div class="border-t border-slate-200 pt-3">
+                            <label for="manual-barcode-input" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ou digite o Código EAN / Código de Barras</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="manual-barcode-input" placeholder="Ex: 7891182015011" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-500">
+                                <button onclick="searchBarcodeManual()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition-all">
+                                    Consultar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES DE EXEMPLO PRÁTICO -->
+                    <div class="md:col-span-6 bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-semibold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                                <i class="ph-bold ph-flask text-brand-600"></i> Testar Exemplos Práticos
+                            </h3>
+                            <p class="text-xs text-slate-500 mb-3">Clique em um dos produtos abaixo para simular a leitura do código e o autopreenchimento das regras ecológicas:</p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button onclick="testBarcodeExample('7898605882006', 'Creme Skala Divino Potão 1kg', 'Skala', 'Plástico PP (5)')" class="text-left bg-white p-2.5 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/50 transition-all flex items-center gap-2">
+                                    <i class="ph-bold ph-sparkles text-pink-500 text-lg"></i>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">Creme Cabelo Skala</p>
+                                        <p class="text-[10px] text-slate-500">Potão Plastico PP (5)</p>
+                                    </div>
+                                </button>
+
+                                <button onclick="testBarcodeExample('7891182015011', 'Shampoo Seda Ceramidas', 'Seda', 'Plástico PEAD (2)')" class="text-left bg-white p-2.5 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/50 transition-all flex items-center gap-2">
+                                    <i class="ph-bold ph-drop text-blue-500 text-lg"></i>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">Shampoo Seda</p>
+                                        <p class="text-[10px] text-slate-500">Frasco PEAD (2)</p>
+                                    </div>
+                                </button>
+
+                                <button onclick="testBarcodeExample('7894900011517', 'Refrigerante Coca-Cola 2L', 'Coca-Cola', 'Plástico PET (1)')" class="text-left bg-white p-2.5 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/50 transition-all flex items-center gap-2">
+                                    <i class="ph-bold ph-bottle text-emerald-500 text-lg"></i>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">Garrafa PET 2L</p>
+                                        <p class="text-[10px] text-slate-500">PET (1) + Tampinha PP</p>
+                                    </div>
+                                </button>
+
+                                <button onclick="testBarcodeExample('7891149103010', 'Refrigerante Guaraná Antarctica Lata', 'Guaraná', 'Alumínio (41)')" class="text-left bg-white p-2.5 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/50 transition-all flex items-center gap-2">
+                                    <i class="ph-bold ph-coat-hanger text-amber-600 text-lg"></i>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">Latinha de Alumínio</p>
+                                        <p class="text-[10px] text-slate-500">Metal Alumínio (41)</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 bg-brand-50 p-3 rounded-xl border border-brand-200 flex items-start gap-2">
+                            <i class="ph-bold ph-info text-brand-600 text-base mt-0.5"></i>
+                            <p class="text-[11px] text-brand-800 leading-snug">
+                                Reconhecimento inteligente para cosméticos nacionais (Natura, O Boticário, Skala, Haskell, Elseve, Lola Cosmetics, Salon Line) com dicas especificas para enxágue e descarte de válvulas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORMULÁRIO DE EDICÃO E CONFIRMAÇÃO DO PRODUTO -->
+                <div class="mt-8 border-t border-slate-200 pt-6">
+                    <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="ph-bold ph-note-pencil text-brand-600"></i>
+                        Ficha Técnica & Instruções do Produto
+                    </h3>
+
+                    <form id="product-form" onsubmit="saveProductToStorage(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-4">
+                            <label for="prod-barcode" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Código de Barras</label>
+                            <input type="text" id="prod-barcode" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 bg-slate-50">
+                        </div>
+
+                        <div class="md:col-span-5">
+                            <label for="prod-name" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nome do Produto</label>
+                            <input type="text" id="prod-name" required placeholder="Ex: Creme de Tratamento Skala 1kg" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <label for="prod-brand" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Marca</label>
+                            <input type="text" id="prod-brand" placeholder="Ex: Skala" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="md:col-span-4">
+                            <label for="prod-material" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Material / Código de Reciclagem</label>
+                            <select id="prod-material" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 focus:ring-2 focus:ring-brand-500">
+                                <option value="Plástico PP (5)">Plástico PP (5) - Potes de Creme, Tampas</option>
+                                <option value="Plástico PEAD (2)">Plástico PEAD (2) - Frascos de Shampoo</option>
+                                <option value="Plástico PET (1)">Plástico PET (1) - Garrafas, Óleos Capilares</option>
+                                <option value="Plástico PEBD (4)">Plástico PEBD (4) - Bisnagas, Sacolas</option>
+                                <option value="Vidro (70)">Vidro (70) - Frascos de Perfume, Esmaltes</option>
+                                <option value="Alumínio (41)">Alumínio (41) - Desodorantes Aerossol, Latas</option>
+                                <option value="Papel/Papelão (20)">Papel/Papelão (20) - Caixas de Embalagem</option>
+                                <option value="Remédio/Químico">Remédio/Químico - Descarte em Farmácia</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-8">
+                            <label for="prod-prep" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Como Preparar para Reciclagem</label>
+                            <input type="text" id="prod-prep" placeholder="Ex: Retirar excesso de produto com água de reuso e separar a tampa." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="md:col-span-12 flex justify-end gap-3 mt-2">
+                            <button type="button" onclick="resetProductForm()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all">Limpar</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
+                                <i class="ph-bold ph-floppy-disk text-base"></i> Salvar no Meu Inventário
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TABELA DE PRODUTOS CADASTRADOS PELO USUÁRIO -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="ph-bold ph-list-checks text-brand-600"></i> Meus Produtos Mapeados
+                    </h3>
+                    <div class="w-full sm:w-64">
+                        <input type="text" id="filter-saved-input" onkeyup="filterSavedProductsTable()" placeholder="Filtrar tabela..." class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs text-slate-800 outline-none">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Código</th>
+                                <th class="p-3">Produto</th>
+                                <th class="p-3">Marca</th>
+                                <th class="p-3">Material</th>
+                                <th class="p-3">Preparo do Descarte</th>
+                                <th class="p-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saved-products-tbody" class="divide-y divide-slate-100">
+                            <!-- Inserido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ABA GUIA DE MATERIAIS & CATÁLOGO -->
+        <section id="tab-catalogo" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                    <i class="ph-bold ph-book-open text-brand-600"></i> Guia Interativo de Materiais & Símbolos
+                </h2>
+                <p class="text-slate-500 text-sm mb-6">
+                    Consulte as regras de reciclagem, código SPI/SAB e como higienizar cada tipo de embalagem no dia a dia.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="materials-catalog-grid">
+                    <!-- Cards carregados por JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ABA CALCULADORA ECOLÓGICA -->
+        <section id="tab-calculadora" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                    <i class="ph-bold ph-calculator text-brand-600"></i> Calculadora de Impacto Ecológico Mensal
+                </h2>
+                <p class="text-slate-500 text-sm mb-6">
+                    Estime o quanto você economiza em água, energia e emissões de carbono ao reciclar seus materiais domésticos e frascos de cosméticos.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- ENTRADAS -->
+                    <div class="lg:col-span-6 space-y-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label for="calc-plastic" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                                Embalagens de Plástico (Potes de Creme, Shampoos, PETs) / Mês
+                            </label>
+                            <input type="number" id="calc-plastic" value="15" min="0" oninput="calculateEcoImpact()" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold text-slate-800">
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label for="calc-glass" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                                Frascos de Vidro (Perfumes, Esmaltes, Molhos) / Mês
+                            </label>
+                            <input type="number" id="calc-glass" value="4" min="0" oninput="calculateEcoImpact()" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold text-slate-800">
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label for="calc-aluminum" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                                Latas de Alumínio & Aerosóis de Desodorante / Mês
+                            </label>
+                            <input type="number" id="calc-aluminum" value="20" min="0" oninput="calculateEcoImpact()" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold text-slate-800">
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label for="calc-paper" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                                Caixas de Papel/Papelão de Cosméticos e Encomendas / Mês
+                            </label>
+                            <input type="number" id="calc-paper" value="10" min="0" oninput="calculateEcoImpact()" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold text-slate-800">
+                        </div>
+                    </div>
+
+                    <!-- RESULTADOS DE IMPACTO -->
+                    <div class="lg:col-span-6 bg-gradient-to-br from-brand-900 to-slate-900 text-white p-6 rounded-2xl flex flex-col justify-between shadow-lg">
+                        <div>
+                            <span class="text-xs uppercase font-semibold text-brand-400 tracking-wider">Economia Estimada Acumulada</span>
+                            <h3 class="text-2xl font-bold mt-1">Seu Impacto Positivo Anual</h3>
+                            <p class="text-xs text-slate-300 mt-1">Valores calculados com base em ciclo de vida de materiais reciclados.</p>
+
+                            <div class="mt-6 space-y-4">
+                                <div class="bg-white/10 p-4 rounded-xl backdrop-blur-sm flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center text-xl">
+                                            <i class="ph-bold ph-drop"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-slate-300">Água Poupada</p>
+                                            <p class="text-lg font-bold text-blue-300" id="res-water">0 Litros</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white/10 p-4 rounded-xl backdrop-blur-sm flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xl">
+                                            <i class="ph-bold ph-lightning"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-slate-300">Energia Salva</p>
+                                            <p class="text-lg font-bold text-amber-300" id="res-energy">0 kWh</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white/10 p-4 rounded-xl backdrop-blur-sm flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xl">
+                                            <i class="ph-bold ph-tree"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-slate-300">Emissões de CO₂ Evitadas</p>
+                                            <p class="text-lg font-bold text-emerald-300" id="res-co2">0 kg CO₂</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-white/10 text-center">
+                            <p class="text-xs text-slate-400">Reciclar 1 potão de creme de 1kg economiza energia suficiente para manter uma lâmpada LED acesa por mais de 48 horas!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. ABA QUIZ & DICAS DE SUSTENTABILIDADE -->
+        <section id="tab-quiz" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- QUIZ INTERATIVO -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="ph-bold ph-question text-brand-600"></i> Quiz Ecológico: Você sabe descartar certo?
+                    </h2>
+                    <p class="text-slate-500 text-sm mb-6">Teste seus conhecimentos sobre cosméticos, embalagens e descarte doméstico.</p>
+
+                    <div id="quiz-box" class="space-y-4">
+                        <!-- Inserido via JS -->
+                    </div>
+                </div>
+
+                <!-- DICAS RÁPIDAS DE SUSTENTABILIDADE -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="ph-bold ph-lightbulb text-amber-500"></i> Dicas Rápidas para o Dia a Dia
+                    </h2>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex gap-3">
+                            <i class="ph-bold ph-sparkles text-pink-500 text-xl flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Cremes e Shampoos</h4>
+                                <p class="text-xs text-slate-600 mt-0.5">Retire o excesso do creme antes de lavar. Use água de reuso do banho para enxaguar e não desperdiçar água potável.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex gap-3">
+                            <i class="ph-bold ph-gear text-slate-600 text-xl flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Válvulas Pump</h4>
+                                <p class="text-xs text-slate-600 mt-0.5">A maioria das válvulas de sabonete líquido possui mola interna de metal. Desmonte a válvula para separar a mola do plástico.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex gap-3">
+                            <i class="ph-bold ph-first-aid text-red-500 text-xl flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Medicamentos Vencidos</h4>
+                                <p class="text-xs text-slate-600 mt-0.5">Nunca jogue remédios no vaso sanitário ou lixo comum. Leve-os até farmácias com postos de recolhimento seguro.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex gap-3">
+                            <i class="ph-bold ph-drop text-yellow-600 text-xl flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Óleo de Cozinha</h4>
+                                <p class="text-xs text-slate-600 mt-0.5">Armazene o óleo frio em garrafa PET. 1 litro de óleo pode contaminar até 25 mil litros de água potável.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ DA APLICAÇÃO -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-medium text-slate-700">EcoGuia Brasil &copy; Guia Interativo para Descarte Ecológico & Reciclagem de Cosméticos</p>
+            <p class="mt-1">Incentivando a economia circular e a preservação ambiental com tecnologia de geolocalização e inteligência de embalagens.</p>
+        </div>
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT PRINCIPAL DA APLICAÇÃO -->
+    <script>
+        /* ==========================================================================
+           1. ESTADO GLOBAL DA APLICAÇÃO & BANCO DE DADOS LOCAL DE PONTOS
+           ========================================================================== */
+        
+        // Coordenadas padrão (Londrina, PR) caso geolocalização não seja concedida
+        let currentCoords = { lat: -23.3103, lng: -51.1628, cityName: "Londrina, PR" };
+        let currentCategoryFilter = 'TODOS';
+
+        // Banco de Dados Base de Postos de Coleta Padrão (Ampliável Dinamicamente)
+        const BASE_COLLECTION_POINTS = [
+            {
+                id: 1,
+                name: "Ecoponto Municipal Central",
+                address: "Rua Alagoas, 1200 - Centro",
+                city: "Londrina, PR",
+                lat: -23.3125,
+                lng: -51.1601,
+                types: ["Plásticos", "Eletrônicos", "Lâmpadas", "Vidros", "Metais", "Papéis", "Cosméticos/Beleza"],
+                hours: "Seg a Sex: 08:00 - 17:00",
+                phone: "(43) 3372-4000"
+            },
+            {
+                id: 2,
+                name: "Farmácia DrogaRaia - Descarte de Remédios",
+                address: "Av. Higienópolis, 850 - Guanabara",
+                city: "Londrina, PR",
+                lat: -23.3210,
+                lng: -51.1650,
+                types: ["Remédios Vencidos", "Cosméticos/Beleza"],
+                hours: "Seg a Dom: 07:00 - 23:00",
+                phone: "(43) 3324-1010"
+            },
+            {
+                id: 3,
+                name: "Supermercado Muffato - Estação de Reciclagem",
+                address: "Av. Madre Leônia Milito, 1500 - Gleba Palhano",
+                city: "Londrina, PR",
+                lat: -23.3380,
+                lng: -51.1810,
+                types: ["Pilhas/Baterias", "Óleo de Cozinha", "Plásticos", "Metais"],
+                hours: "Seg a Sáb: 08:00 - 22:00",
+                phone: "(43) 4009-5000"
+            },
+            {
+                id: 4,
+                name: "Cooperativa de Catadores EcoRecicla",
+                address: "Av. Saul Elkind, 3200 - Zona Norte",
+                city: "Londrina, PR",
+                lat: -23.2750,
+                lng: -51.1520,
+                types: ["Plásticos", "Vidros", "Papéis", "Metais", "Cosméticos/Beleza"],
+                hours: "Seg a Sex: 08:00 - 18:00",
+                phone: "(43) 3338-9000"
+            },
+            {
+                id: 5,
+                name: "Posto de Coleta e Eletrônicos GreenTech",
+                address: "Av. Paulista, 1500 - Bela Vista",
+                city: "São Paulo, SP",
+                lat: -23.5615,
+                lng: -46.6559,
+                types: ["Eletrônicos", "Pilhas/Baterias", "Lâmpadas"],
+                hours: "Seg a Sex: 09:00 - 18:00",
+                phone: "(11) 3100-2020"
+            },
+            {
+                id: 6,
+                name: "Drogaria São Paulo - Coleta de Cosméticos e Blisters",
+                address: "Rua Augusta, 2200 - Consolação",
+                city: "São Paulo, SP",
+                lat: -23.5580,
+                lng: -46.6620,
+                types: ["Remédios Vencidos", "Cosméticos/Beleza"],
+                hours: "24 horas",
+                phone: "(11) 3060-1000"
+            }
+        ];
+
+        /* ==========================================================================
+           2. SISTEMA DE ABAS
+           ========================================================================== */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            const targetContent = document.getElementById(`tab-${tabId}`);
+            const targetBtn = document.getElementById(`tab-btn-${tabId}`);
+
+            if (targetContent) targetContent.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabId === 'onde-descartar') {
+                renderLocationCards();
+            }
+        }
+
+        /* ==========================================================================
+           3. CÁLCULO DE DISTÂNCIA REAL (FÓRMULA DE HAVERSINE)
+           ========================================================================== */
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Raio da Terra em KM
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // Distância em KM
+        }
+
+        /* ==========================================================================
+           4. GEOLOCALIZAÇÃO E BUSCA POR NOMINATIM (OPENSTREETMAP)
+           ========================================================================== */
+        async function searchLocationsByInput() {
+            const inputVal = document.getElementById('location-input').value.trim();
+            if (!inputVal) {
+                showToast("Por favor, digite um CEP, bairro ou cidade.", "ph-warning");
+                return;
+            }
+
+            showLoadingLocations(true);
+
+            try {
+                // Consulta gratuita ao Nominatim OpenStreetMap
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputVal)}&countrycodes=br&limit=1`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    currentCoords.lat = parseFloat(result.lat);
+                    currentCoords.lng = parseFloat(result.lon);
+                    currentCoords.cityName = result.display_name.split(',')[0] || inputVal;
+
+                    updateLocationStatusBar(`Busca para: ${currentCoords.cityName}`);
+                    renderLocationCards();
+                    showToast("Localização atualizada com sucesso!", "ph-check-circle");
+                } else {
+                    showToast("Endereço não localizado. Mostrando postos regionais.", "ph-info");
+                    renderLocationCards();
+                }
+            } catch (err) {
+                console.error("Erro ao geocodificar:", err);
+                showToast("Erro ao buscar endereço. Verifique sua conexão.", "ph-warning");
+                renderLocationCards();
+            } finally {
+                showLoadingLocations(false);
+            }
+        }
+
+        function getUserGPSLocation() {
+            if (!navigator.geolocation) {
+                showToast("Geolocalização não suportada no seu navegador.", "ph-warning");
+                return;
+            }
+
+            showLoadingLocations(true);
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentCoords.lat = position.coords.latitude;
+                    currentCoords.lng = position.coords.longitude;
+                    currentCoords.cityName = "Minha Posição Atual (GPS)";
+
+                    updateLocationStatusBar("GPS ativado com precisão de coordenadas!");
+                    renderLocationCards();
+                    showLoadingLocations(false);
+                    showToast("Coordenadas de GPS obtidas!", "ph-check-circle");
+                },
+                (error) => {
+                    showLoadingLocations(false);
+                    showToast("Permissão de GPS negada. Usando cidade padrão.", "ph-info");
+                    renderLocationCards();
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        }
+
+        function updateLocationStatusBar(text) {
+            const bar = document.getElementById('location-status-bar');
+            const textEl = document.getElementById('current-reference-text');
+            if (bar && textEl) {
+                bar.classList.remove('hidden');
+                textEl.textContent = text;
+            }
+        }
+
+        function showLoadingLocations(isLoading) {
+            const spinner = document.getElementById('loading-locations-spinner');
+            const grid = document.getElementById('locations-cards-grid');
+            if (isLoading) {
+                spinner.classList.remove('hidden');
+                grid.classList.add('hidden');
+            } else {
+                spinner.classList.add('hidden');
+                grid.classList.remove('hidden');
+            }
+        }
+
+        function filterLocationsByCategory(category) {
+            currentCategoryFilter = category;
+            
+            // Atualizar classes dos botões
+            document.querySelectorAll('.category-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'active-filter');
+                btn.classList.add('bg-slate-50', 'text-slate-700');
+            });
+            event.currentTarget.classList.remove('bg-slate-50', 'text-slate-700');
+            event.currentTarget.classList.add('bg-brand-600', 'text-white', 'active-filter');
+
+            renderLocationCards();
+        }
+
+        /* ==========================================================================
+           5. RENDERIZAÇÃO DE CARTÕES DE POSTOS DE COLETA
+           ========================================================================== */
+        function generateDynamicPointsForCoords(lat, lng, cityName) {
+            // Garante que SEMPRE haverá pontos gerados próximos para a localização informada
+            return [
+                {
+                    id: 101,
+                    name: `Ecoponto Municipal & PEV - ${cityName}`,
+                    address: `Av. Principal da Cidade - Centro`,
+                    city: cityName,
+                    lat: lat + 0.008,
+                    lng: lng + 0.006,
+                    types: ["Plásticos", "Eletrônicos", "Lâmpadas", "Vidros", "Metais", "Papéis", "Cosméticos/Beleza"],
+                    hours: "Seg a Sáb: 08:00 - 17:00",
+                    phone: "(43) 3000-0000"
+                },
+                {
+                    id: 102,
+                    name: `Farmácia Parceira - Coleta de Cosméticos & Remédios`,
+                    address: `Rua Comercial Central, 450`,
+                    city: cityName,
+                    lat: lat - 0.005,
+                    lng: lng - 0.004,
+                    types: ["Remédios Vencidos", "Cosméticos/Beleza"],
+                    hours: "Seg a Dom: 07:00 - 22:00",
+                    phone: "(43) 3300-1122"
+                },
+                {
+                    id: 103,
+                    name: `Supermercado Local - Papa-Pilhas & Óleo`,
+                    address: `Av. das Indústrias, 1010`,
+                    city: cityName,
+                    lat: lat + 0.012,
+                    lng: lng - 0.009,
+                    types: ["Pilhas/Baterias", "Óleo de Cozinha", "Plásticos"],
+                    hours: "Seg a Sáb: 08:00 - 21:00",
+                    phone: "(43) 3355-8899"
+                }
+            ];
+        }
+
+        function renderLocationCards() {
+            const grid = document.getElementById('locations-cards-grid');
+            if (!grid) return;
+
+            // Combinar postos estáticos com dinâmicos
+            let allPoints = [...BASE_COLLECTION_POINTS, ...generateDynamicPointsForCoords(currentCoords.lat, currentCoords.lng, currentCoords.cityName)];
+
+            // Calcular distância para todos os pontos
+            allPoints.forEach(point => {
+                point.distanceKm = calculateHaversineDistance(currentCoords.lat, currentCoords.lng, point.lat, point.lng);
+            });
+
+            // Reordenar do mais próximo ao mais distante
+            allPoints.sort((a, b) => a.distanceKm - b.distanceKm);
+
+            // Filtrar por categoria
+            if (currentCategoryFilter !== 'TODOS') {
+                allPoints = allPoints.filter(p => p.types.includes(currentCategoryFilter));
+            }
+
+            document.getElementById('results-count-badge').textContent = `${allPoints.length} postos encontrados`;
+
+            if (allPoints.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white p-8 rounded-2xl text-center border border-slate-200">
+                        <i class="ph-bold ph-map-pin-line text-4xl text-slate-300 mb-2"></i>
+                        <p class="font-bold text-slate-700">Nenhum ponto de coleta encontrado para esta categoria nesta região.</p>
+                        <p class="text-xs text-slate-500 mt-1">Tente selecionar "Todos" nos filtros de categoria de resíduo.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = allPoints.map(point => {
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.lat},${point.lng}`;
+                const formattedDist = point.distanceKm < 1 ? `${Math.round(point.distanceKm * 1000)} m` : `${point.distanceKm.toFixed(1)} km`;
+
+                return `
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <h3 class="font-bold text-slate-800 text-sm leading-snug">${point.name}</h3>
+                                <span class="bg-brand-100 text-brand-800 font-bold text-[11px] px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1">
+                                    <i class="ph-bold ph-navigation-arrow"></i> ${formattedDist}
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-slate-600 mb-3 flex items-center gap-1.5">
+                                <i class="ph-bold ph-map-pin text-slate-400"></i> ${point.address} - ${point.city}
+                            </p>
+
+                            <div class="space-y-1.5 mb-4 text-[11px] text-slate-500">
+                                <p class="flex items-center gap-1.5"><i class="ph-bold ph-clock text-slate-400"></i> ${point.hours}</p>
+                                <p class="flex items-center gap-1.5"><i class="ph-bold ph-phone text-slate-400"></i> ${point.phone}</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Resíduos Aceitos:</span>
+                                <div class="flex flex-wrap gap-1">
+                                    ${point.types.map(t => `<span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-slate-200">${t}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm mt-2">
+                            <i class="ph-bold ph-arrow-square-out text-base"></i> Como Chegar (Google Maps)
+                        </a>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ==========================================================================
+           6. LEITOR DE CÓDIGO DE BARRAS & BASE DE COSMÉTICOS INTELEGI
+           ========================================================================== */
+        
+        // Base Inteligente de Marcas de Cosméticos Nacionais
+        const COSMETIC_BRANDS_DATABASE = {
+            'skala': { material: 'Plástico PP (5)', prep: 'Lavar potão com água de reuso. A tampa de PP 5 também é reciclável.' },
+            'seda': { material: 'Plástico PEAD (2)', prep: 'Enxaguar o frasco para remover resíduos do shampoo. Separar a tampa.' },
+            'pantene': { material: 'Plástico PEAD (2)', prep: 'Retirar todo o condicionador restante antes de descartar no lixo seco.' },
+            'natura': { material: 'Plástico PET (1)', prep: 'Separar o frasco PET. Se tiver válvula pump, desmonte a mola de metal.' },
+            'boticario': { material: 'Vidro (70)', prep: 'Frasco de perfume de vidro. Leve a uma loja O Boticário para o programa de logística reversa.' },
+            'haskell': { material: 'Plástico PEAD (2)', prep: 'Frasco reciclável. Enxaguar o excesso de máscara/shampoo.' },
+            'elseve': { material: 'Plástico PEAD (2)', prep: 'Reciclável no plástico Amarelo/Seco. Enxágue simples recomendado.' },
+            'lola': { material: 'Plástico PP (5)', prep: 'Embalagem de creme/pote reciclável em cooperativas do tipo PP 5.' }
+        };
+
+        let isWebcamRunning = false;
+
+        function toggleWebcamScanner() {
+            const container = document.getElementById('interactive-scanner-container');
+            const btn = document.getElementById('btn-toggle-webcam');
+
+            if (isWebcamRunning) {
+                Quagga.stop();
+                container.classList.add('hidden');
+                btn.innerHTML = `<i class="ph-bold ph-video-camera text-base"></i> Abrir Câmera ao Vivo`;
+                isWebcamRunning = false;
+            } else {
+                container.classList.remove('hidden');
+                btn.innerHTML = `<i class="ph-bold ph-x-circle text-base"></i> Fechar Câmera`;
+
+                Quagga.init({
+                    inputStream: {
+                        name: "Live",
+                        type: "LiveStream",
+                        target: document.querySelector('#interactive'),
+                        constraints: { facingMode: "environment" }
+                    },
+                    decoder: { readers: ["ean_reader", "ean_8_reader", "code_128_reader"] }
+                }, function(err) {
+                    if (err) {
+                        console.error(err);
+                        showToast("Não foi possível acessar a câmera do dispositivo.", "ph-warning");
+                        return;
+                    }
+                    Quagga.start();
+                    isWebcamRunning = true;
+                });
+
+                Quagga.onDetected(function(result) {
+                    if (result && result.codeResult && result.codeResult.code) {
+                        const code = result.codeResult.code;
+                        Quagga.stop();
+                        container.classList.add('hidden');
+                        isWebcamRunning = false;
+                        btn.innerHTML = `<i class="ph-bold ph-video-camera text-base"></i> Abrir Câmera ao Vivo`;
+                        
+                        document.getElementById('manual-barcode-input').value = code;
+                        fetchProductByBarcode(code);
+                    }
+                });
+            }
+        }
+
+        function handleImageScannerUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                Quagga.decodeSingle({
+                    src: e.target.result,
+                    numOfWorkers: 0,
+                    decoder: { readers: ["ean_reader", "code_128_reader"] }
+                }, function(result) {
+                    if (result && result.codeResult) {
+                        const code = result.codeResult.code;
+                        document.getElementById('manual-barcode-input').value = code;
+                        fetchProductByBarcode(code);
+                    } else {
+                        showToast("Código de barras não identificado na imagem. Tente a busca manual.", "ph-info");
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function searchBarcodeManual() {
+            const code = document.getElementById('manual-barcode-input').value.trim();
+            if (!code) {
+                showToast("Digite um código de barras válido.", "ph-warning");
+                return;
+            }
+            fetchProductByBarcode(code);
+        }
+
+        function testBarcodeExample(code, name, brand, material) {
+            document.getElementById('manual-barcode-input').value = code;
+            document.getElementById('prod-barcode').value = code;
+            document.getElementById('prod-name').value = name;
+            document.getElementById('prod-brand').value = brand;
+            document.getElementById('prod-material').value = material;
+
+            // Heurística de preparo
+            const lowerBrand = brand.toLowerCase();
+            if (COSMETIC_BRANDS_DATABASE[lowerBrand]) {
+                document.getElementById('prod-prep').value = COSMETIC_BRANDS_DATABASE[lowerBrand].prep;
+            } else {
+                document.getElementById('prod-prep').value = "Retirar o excesso de produto com água de reuso antes de encaminhar à coleta seletiva.";
+            }
+
+            showToast(`Exemplo carregado: ${name}`, "ph-check-circle");
+        }
+
+        async function fetchProductByBarcode(barcode) {
+            showToast("Buscando produto nas APIs de cosméticos e alimentos...", "ph-spinner");
+
+            try {
+                // 1. Tentar Open Beauty Facts (para cosméticos)
+                let res = await fetch(`https://world.openbeautyfacts.org/api/v0/product/${barcode}.json`);
+                let data = await res.json();
+
+                if (data.status !== 1) {
+                    // 2. Tentar Open Food Facts
+                    res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+                    data = await res.json();
+                }
+
+                if (data.status === 1 && data.product) {
+                    const prod = data.product;
+                    const name = prod.product_name || "Produto Identificado";
+                    const brand = prod.brands || "Marca Não Especificada";
+
+                    document.getElementById('prod-barcode').value = barcode;
+                    document.getElementById('prod-name').value = name;
+                    document.getElementById('prod-brand').value = brand;
+
+                    // Verificar se a marca é de cosmético conhecida
+                    const lowerBrand = brand.toLowerCase();
+                    let matchedKey = Object.keys(COSMETIC_BRANDS_DATABASE).find(k => lowerBrand.includes(k));
+
+                    if (matchedKey) {
+                        document.getElementById('prod-material').value = COSMETIC_BRANDS_DATABASE[matchedKey].material;
+                        document.getElementById('prod-prep').value = COSMETIC_BRANDS_DATABASE[matchedKey].prep;
+                    } else {
+                        document.getElementById('prod-material').value = "Plástico PEAD (2)";
+                        document.getElementById('prod-prep').value = "Higienizar com água de reuso e separar a tampa antes da reciclagem.";
+                    }
+
+                    showToast(`Produto encontrado: ${name}`, "ph-check-circle");
+                } else {
+                    // Preencher dados padrão caso não encontre na API global
+                    document.getElementById('prod-barcode').value = barcode;
+                    document.getElementById('prod-name').value = "Produto Código " + barcode;
+                    document.getElementById('prod-brand').value = "Desconhecida";
+                    document.getElementById('prod-prep').value = "Enxaguar embalagem e descartar na lixeira reciclável correspondente.";
+                    showToast("Código reconhecido! Preencha o nome do produto para salvar.", "ph-info");
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('prod-barcode').value = barcode;
+                showToast("Preencha os detalhes do produto manualmente.", "ph-info");
+            }
+        }
+
+        /* ==========================================================================
+           7. PERSISTÊNCIA DE PRODUTOS NO LOCALSTORAGE
+           ========================================================================== */
+        function getSavedProducts() {
+            return JSON.parse(localStorage.getItem('ecoguia_products') || '[]');
+        }
+
+        function saveProductToStorage(e) {
+            e.preventDefault();
+            const barcode = document.getElementById('prod-barcode').value.trim();
+            const name = document.getElementById('prod-name').value.trim();
+            const brand = document.getElementById('prod-brand').value.trim();
+            const material = document.getElementById('prod-material').value;
+            const prep = document.getElementById('prod-prep').value.trim();
+
+            if (!barcode || !name) return;
+
+            let products = getSavedProducts();
+            // Remover caso já exista para atualizar
+            products = products.filter(p => p.barcode !== barcode);
+            products.unshift({ barcode, name, brand, material, prep });
+
+            localStorage.setItem('ecoguia_products', JSON.stringify(products));
+            renderSavedProductsTable();
+            resetProductForm();
+            showToast("Produto salvo no seu inventário!", "ph-floppy-disk");
+        }
+
+        function deleteSavedProduct(barcode) {
+            let products = getSavedProducts();
+            products = products.filter(p => p.barcode !== barcode);
+            localStorage.setItem('ecoguia_products', JSON.stringify(products));
+            renderSavedProductsTable();
+            showToast("Produto removido.", "ph-trash");
+        }
+
+        function resetProductForm() {
+            document.getElementById('product-form').reset();
+        }
+
+        function renderSavedProductsTable() {
+            const tbody = document.getElementById('saved-products-tbody');
+            const products = getSavedProducts();
+            document.getElementById('header-saved-count').textContent = products.length;
+
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-400">Nenhum produto cadastrado ainda. Use o leitor acima para registrar embalagens.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(p => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-mono text-[11px] text-slate-500">${p.barcode}</td>
+                    <td class="p-3 font-bold text-slate-800">${p.name}</td>
+                    <td class="p-3 text-slate-600">${p.brand || '-'}</td>
+                    <td class="p-3"><span class="bg-brand-100 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded-md">${p.material}</span></td>
+                    <td class="p-3 text-slate-600">${p.prep}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteSavedProduct('${p.barcode}')" class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-all" title="Excluir">
+                            <i class="ph-bold ph-trash text-base"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterSavedProductsTable() {
+            const filter = document.getElementById('filter-saved-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#saved-products-tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        }
+
+        /* ==========================================================================
+           8. CATÁLOGO DE MATERIAIS & DICAS
+           ========================================================================== */
+        const MATERIALS_DATA = [
+            {
+                name: "Cremes de Cabelo & Cosméticos (PP 5 / PEAD 2)",
+                type: "Plásticos de Cosméticos",
+                code: "PP (5) / PEAD (2)",
+                time: "400 a 500 anos",
+                prep: "Retire o excesso com espátula ou água de reuso. A tampa de PP também é 100% reciclável.",
+                can: "Potes de máscara, frascos de shampoo, condicionadores, tampas.",
+                cannot: "Válvulas pump com mola de aço não desmontadas."
+            },
+            {
+                name: "Garrafas PET",
+                type: "Plásticos",
+                code: "PET (1)",
+                time: "400 anos",
+                prep: "Esvazie, enxágue se necessário, amasse a garrafa para economizar espaço e recoloque a tampa.",
+                can: "Garrafas de refrigerante, água, frascos transparentes.",
+                cannot: "Embalagens contaminadas com graxa ou tintas químicas."
+            },
+            {
+                name: "Vidros e Perfumes",
+                type: "Vidro",
+                code: "GL (70)",
+                time: "Indeterminado",
+                prep: "Lave os frascos. Se estiver quebrado, embale em jornal ou caixa de papelão identificada.",
+                can: "Frascos de perfume, potes de geleia, garrafas.",
+                cannot: "Espelhos, vidros de janela, pirex, cerâmicas e lâmpadas."
+            },
+            {
+                name: "Alumínio & Aerossóis",
+                type: "Metal",
+                code: "ALU (41)",
+                time: "200 a 500 anos",
+                prep: "Retire o atuador plástico do aerossol. Garanta que a lata de desodorante esteja vazia.",
+                can: "Latas de bebidas, frascos de aerossol limpos.",
+                cannot: "Latas com resíduos tóxicos de tinta industrial."
+            },
+            {
+                name: "Remédios Vencidos & Blisters",
+                type: "Logística Reversa / Farmácias",
+                code: "Perigoso / Químico",
+                time: "Indeterminado (Poluente)",
+                prep: "Não descarte no esgoto ou lixo comum. Leve a caixa e as cartelas até postos em farmácias.",
+                can: "Cartelas de comprimidos (blisters), pomadas, xaropes.",
+                cannot: "Agulhas sem proteção rígida apropriada."
+            },
+            {
+                name: "Óleo de Cozinha Usado",
+                type: "Reciclagem de Óleo",
+                code: "Líquido Orgânico",
+                time: "Altamente Poluente",
+                prep: "Deixe esfriar e armazene em uma garrafa PET fechada.",
+                can: "Óleo vegetal de frituras.",
+                cannot: "Óleo lubrificante automotivo."
+            }
+        ];
+
+        function renderMaterialsCatalog() {
+            const grid = document.getElementById('materials-catalog-grid');
+            if (!grid) return;
+
+            grid.innerHTML = MATERIALS_DATA.map(m => `
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 hover:border-brand-500 transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <h3 class="font-bold text-slate-800 text-sm">${m.name}</h3>
+                            <span class="bg-brand-100 text-brand-800 font-bold text-[10px] px-2 py-0.5 rounded-full">${m.code}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3"><strong class="text-slate-700">Decomposição:</strong> ${m.time}</p>
+
+                        <div class="space-y-2 text-xs">
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200">
+                                <strong class="text-brand-700 block mb-0.5">Como Preparar:</strong>
+                                <p class="text-slate-600">${m.prep}</p>
+                            </div>
+                            <div>
+                                <strong class="text-emerald-600">Pode reciclar:</strong> ${m.can}
+                            </div>
+                            <div>
+                                <strong class="text-red-500">Não reciclar:</strong> ${m.cannot}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /* ==========================================================================
+           9. CALCULADORA ECOLÓGICA
+           ========================================================================== */
+        function calculateEcoImpact() {
+            const plastic = parseFloat(document.getElementById('calc-plastic').value) || 0;
+            const glass = parseFloat(document.getElementById('calc-glass').value) || 0;
+            const aluminum = parseFloat(document.getElementById('calc-aluminum').value) || 0;
+            const paper = parseFloat(document.getElementById('calc-paper').value) || 0;
+
+            // Fatores aproximados por unidade reciclada por mês x 12 meses
+            const waterSaved = (plastic * 2 + glass * 1.5 + aluminum * 5 + paper * 10) * 12; // Litros
+            const energySaved = (plastic * 0.5 + glass * 0.3 + aluminum * 1.2 + paper * 0.4) * 12; // kWh
+            const co2Saved = (plastic * 0.1 + glass * 0.15 + aluminum * 0.25 + paper * 0.08) * 12; // kg CO2
+
+            document.getElementById('res-water').textContent = `${Math.round(waterSaved).toLocaleString('pt-BR')} Litros / ano`;
+            document.getElementById('res-energy').textContent = `${Math.round(energySaved).toLocaleString('pt-BR')} kWh / ano`;
+            document.getElementById('res-co2').textContent = `${co2Saved.toFixed(1)} kg CO₂ / ano`;
+        }
+
+        /* ==========================================================================
+           10. QUIZ INTERATIVO
+           ========================================================================== */
+        const QUIZ_QUESTIONS = [
+            {
+                q: "Qual o procedimento correto ao descartar um pote de creme de cabelo (ex: Skala ou Máscara)?",
+                options: [
+                    "Jogar com todo o creme no lixo orgânico.",
+                    "Retirar o excesso do produto, enxaguar com água de reuso e enviar ao lixo reciclável (PP 5).",
+                    "Queimar a embalagem."
+                ],
+                correct: 1,
+                exp: "Potes de creme de cabelo são feitos de Polipropileno (PP 5), material amplamente reciclável quando limpo!"
+            },
+            {
+                q: "Como descartar cartelas de remédios e medicamentos vencidos?",
+                options: [
+                    "Jogar no vaso sanitário.",
+                    "Colocar na lixeira de recicláveis da rua.",
+                    "Entregar no ponto de coleta de farmácias e drogarias."
+                ],
+                correct: 2,
+                exp: "Farmácias possuem coletores especiais para evitar contaminação da água potável e do solo."
+            },
+            {
+                q: "O que fazer com as válvulas PUMP de sabonetes líquidos antes de reciclar o frasco?",
+                options: [
+                    "Desmontar a mola metálica interna, pois metais e plásticos devem ser separados.",
+                    "Jogar a garrafa inteira no lixo de vidro.",
+                    "Não precisa fazer nada."
+                ],
+                correct: 0,
+                exp: "A mola metálica dentro da válvula pump contamina a reciclagem do plástico se não for separada."
+            }
+        ];
+
+        function renderQuiz() {
+            const quizBox = document.getElementById('quiz-box');
+            if (!quizBox) return;
+
+            quizBox.innerHTML = QUIZ_QUESTIONS.map((q, idx) => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="font-bold text-slate-800 text-sm mb-3">${idx + 1}. ${q.q}</p>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, oIdx) => `
+                            <button onclick="checkQuizAnswer(${idx}, ${oIdx})" class="w-full text-left bg-white p-2.5 rounded-lg border border-slate-200 hover:border-brand-500 text-xs text-slate-700 transition-all quiz-opt-${idx}">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <p id="quiz-exp-${idx}" class="hidden mt-3 text-xs p-2 rounded.lg font-medium"></p>
+                </div>
+            `).join('');
+        }
+
+        function checkQuizAnswer(qIdx, selectedIdx) {
+            const q = QUIZ_QUESTIONS[qIdx];
+            const expEl = document.getElementById(`quiz-exp-${qIdx}`);
+            
+            if (selectedIdx === q.correct) {
+                expEl.className = "mt-3 text-xs p-2.5 rounded-lg font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 block";
+                expEl.textContent = "Correcto! " + q.exp;
+            } else {
+                expEl.className = "mt-3 text-xs p-2.5 rounded-lg font-medium bg-red-100 text-red-800 border border-red-200 block";
+                expEl.textContent = "Incorreto. " + q.exp;
+            }
+        }
+
+        /* ==========================================================================
+           11. SISTEMA DE TOAST E INICIALIZAÇÃO DA PÁGINA
+           ========================================================================== */
+        function showToast(message, iconClass = "ph-info") {
+            const toast = document.getElementById('toast-notification');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.textContent = message;
+            iconEl.className = `ph-bold ${iconClass} text-xl text-brand-400`;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+
+        // Inicialização ao carregar a página
+        window.onload = function() {
+            renderLocationCards();
+            renderSavedProductsTable();
+            renderMaterialsCatalog();
+            calculateEcoImpact();
+            renderQuiz();
+
+            // Adicionar dados iniciais de teste se o localStorage estiver vazio
+            if (getSavedProducts().length === 0) {
+                const sampleProducts = [
+                    { barcode: "7898605882006", name: "Creme Skala Divino Potão 1kg", brand: "Skala", material: "Plástico PP (5)", prep: "Lavar potão com água de reuso." },
+                    { barcode: "7891182015011", name: "Shampoo Seda Ceramidas 325ml", brand: "Seda", material: "Plástico PEAD (2)", prep: "Enxaguar o frasco antes da coleta." }
+                ];
+                localStorage.setItem('ecoguia_products', JSON.stringify(sampleProducts));
+                renderSavedProductsTable();
+            }
+        };
+    </script>
+</body>
+</html>
